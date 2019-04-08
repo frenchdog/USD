@@ -44,7 +44,6 @@ class Launcher(object):
       -- RegisterOptions()
       -- ParseOptions()
       -- ValidateOptions()
-      -- GetResolverContext()
     '''
     def __init__(self):
         pass
@@ -230,28 +229,6 @@ class Launcher(object):
             raise InvalidUsdviewOption("cannot supply both --clearsettings " \
                                        "and --defaultsettings.")
 
-    def GetResolverContext(self, usdFile):
-        """
-        Create and return the ArResolverContext that will be used to Open
-        the Stage for the given usdFile.  Base implementation
-        creates a default asset context for the usdFile asset, but derived
-        classes can do more sophisticated resolver and context configuration.
-        
-        Will be called each time a new stage is opened.
-
-        It is not necessary to create an ArResolverContext for every UsdStage
-        one opens, as the Stage will use reasonable fallback behavior if no
-        context is provided.  For usdview, configuring an asset context by
-        default is reasonable, and allows clients that embed usdview to 
-        achieve different behavior when needed.
-        """
-        from pxr import Ar
-        
-        r = Ar.GetResolver()
-        r.ConfigureResolverForAsset(usdFile)
-        return r.CreateDefaultContextForAsset(usdFile)
-
-
     def LaunchPreamble(self, arg_parse_result):
         # Initialize concurrency limit as early as possible so that it is
         # respected by subsequent imports.
@@ -275,8 +252,7 @@ class Launcher(object):
                                            resourceDir.replace("\\", "/"))
         app.setStyleSheet(sheetString)
 
-        contextCreator = lambda usdFile: self.GetResolverContext(usdFile)
-        appController = AppController(arg_parse_result, contextCreator)
+        appController = AppController(arg_parse_result)
 
         return (app, appController)
 

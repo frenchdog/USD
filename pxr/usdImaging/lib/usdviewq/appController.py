@@ -311,7 +311,7 @@ class AppController(QtCore.QObject):
         # assertions without it.
         self._primToItemMap.clear()
 
-    def __init__(self, parserData, resolverContextFn):
+    def __init__(self, parserData):
         QtCore.QObject.__init__(self)
 
         with Timer() as uiOpenTimer:
@@ -326,7 +326,6 @@ class AppController(QtCore.QObject):
             self._noRender = parserData.noRender
             self._noPlugins = parserData.noPlugins
             self._unloaded = parserData.unloaded
-            self._resolverContextFn = resolverContextFn
             self._debug = os.getenv('USDVIEW_DEBUG', False)
             self._printTiming = parserData.timing or self._debug
             self._lastViewContext = {}
@@ -1105,6 +1104,8 @@ class AppController(QtCore.QObject):
         if not Ar.GetResolver().Resolve(usdFilePath):
             sys.stderr.write(_GetFormattedError(["File not found"]))
             sys.exit(1)
+        else:
+            Ar.GetResolver().ConfigureResolverForAsset(usdFilePath)
 
         if self._mallocTags != 'none':
             Tf.MallocTag.Initialize()
@@ -1139,14 +1140,13 @@ class AppController(QtCore.QObject):
             if popMask:
                 for p in populationMaskPaths:
                     popMask.Add(p)
+
                 stage = Usd.Stage.OpenMasked(layer,
                                              sessionLayer,
-                                             self._resolverContextFn(usdFilePath),
                                              popMask, loadSet)
             else:
                 stage = Usd.Stage.Open(layer,
                                        sessionLayer,
-                                       self._resolverContextFn(usdFilePath), 
                                        loadSet)
 
         if not stage:
